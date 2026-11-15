@@ -82,7 +82,7 @@ object ReminderScheduler {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         store.medications.filter { it.taken || it.id !in active }.forEach {
             notifications.cancel(it.id)
-            alarmManager.cancel(followUpIntent(context, it.id, LocalDate.now()))
+            cancelFollowUp(context, it.id)
         }
 
         val next = if (store.settings.remindersEnabled && store.settings.onboardingDone) {
@@ -98,7 +98,25 @@ object ReminderScheduler {
         } else {
             setAlarm(context, next, alarm)
         }
+
+        // Overdue doses keep being reminded, also when their due alarm never fired (e.g. the time
+        // was set in the past, or the phone restarted). Pending follow-ups are left untouched.
+        if (store.settings.remindersEnabled && store.settings.repeatReminders && store.settings.onboardingDone) {
+            val now = LocalDateTime.now()
+            remindable(store)
+                .filter { !it.taken && !it.time!!.isAfter(now.toLocalTime()) && it.wasScheduledAt(now.toLocalDate().atTime(it.time)) }
+                .filter { !hasFollowUp(context, it.id) }
+                .forEach { scheduleFollowUp(context, it.id, repeatMinutes(store)) }
+        }
     }
+
+    private fun hasFollowUp(context: Context, medicationId: Int): Boolean =
+        PendingIntent.getBroadcast(
+            context,
+            FOLLOW_UP_REQUEST_OFFSET + medicationId,
+            Intent(context, ReminderReceiver::class.java).setAction(ACTION_SNOOZE_DUE),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+        ) != null
 
     /** Shows reminders for every untaken dose scheduled at [time]. */
     internal fun onDue(context: Context, time: LocalTime?) {
@@ -126,11 +144,23 @@ object ReminderScheduler {
      */
     internal fun onFollowUpDue(context: Context, medicationId: Int, dueDay: LocalDate?) {
         val store = MedicationStore.get(context)
-        if (dueDay != null && dueDay != LocalDate.now()) return
-        val medication = remindable(store).firstOrNull { it.id == medicationId } ?: return
-        if (medication.taken || !store.settings.remindersEnabled) return
-        notify(context, store, medication)
+        val medication = remindable(store).firstOrNull { it.id == medicationId }
+        val stillDue = (dueDay == null || dueDay == LocalDate.now()) &&
+            medication != null && !medication.taken && store.settings.remindersEnabled
+        if (!stillDue) {
+            cancelFollowUp(context, medicationId)
+            return
+        }
+        notify(context, store, medication!!)
         if (store.settings.repeatReminders) scheduleFollowUp(context, medicationId, repeatMinutes(store))
+        else cancelFollowUp(context, medicationId)
+    }
+
+    /** Ends a follow-up chain; the PendingIntent itself is released so [hasFollowUp] sees it is gone. */
+    private fun cancelFollowUp(context: Context, medicationId: Int) {
+        val intent = followUpIntent(context, medicationId, LocalDate.now())
+        context.getSystemService(AlarmManager::class.java).cancel(intent)
+        intent.cancel()
     }
 
     private fun repeatMinutes(store: MedicationStore): Long =

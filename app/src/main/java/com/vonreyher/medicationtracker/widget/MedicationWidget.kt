@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
-import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -50,7 +49,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * Round home screen widget in Material You colors: the ring shows how many of today's scheduled
+ * Round home screen widget in the app's purple: the ring shows how many of today's scheduled
  * doses are done, the center what has to be taken next.
  */
 class MedicationWidget : GlanceAppWidget() {
@@ -126,34 +125,14 @@ private data class WidgetColors(
     val textVariant: Int
 ) {
     companion object {
-        /** Uses the wallpaper-based system palette (Material You) where available. */
+        /** The app's purple palette, light or dark like the system. */
         fun resolve(context: Context): WidgetColors {
             val night = context.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                fun c(id: Int) = context.getColor(id)
-                return if (night) {
-                    WidgetColors(
-                        container = c(android.R.color.system_accent1_800),
-                        track = c(android.R.color.system_accent1_700),
-                        progress = c(android.R.color.system_accent1_200),
-                        text = c(android.R.color.system_accent1_50),
-                        textVariant = c(android.R.color.system_accent1_200)
-                    )
-                } else {
-                    WidgetColors(
-                        container = c(android.R.color.system_accent1_100),
-                        track = c(android.R.color.system_accent1_200),
-                        progress = c(android.R.color.system_accent1_600),
-                        text = c(android.R.color.system_accent1_900),
-                        textVariant = c(android.R.color.system_accent1_700)
-                    )
-                }
-            }
             return if (night) {
-                WidgetColors(0xFF0F5130.toInt(), 0xFF2B6A46.toInt(), 0xFF95D5A8.toInt(), 0xFFB0F1C3.toInt(), 0xFF95D5A8.toInt())
+                WidgetColors(0xFF533D6C.toInt(), 0xFF6B5585.toInt(), 0xFFD8BDF2.toInt(), 0xFFEDD9FF.toInt(), 0xFFD8BDF2.toInt())
             } else {
-                WidgetColors(0xFFB0F1C3.toInt(), 0xFF95D5A8.toInt(), 0xFF2B6A46.toInt(), 0xFF00210F.toInt(), 0xFF2B6A46.toInt())
+                WidgetColors(0xFFEDD9FF.toInt(), 0xFFD8BDF2.toInt(), 0xFF6B5585.toInt(), 0xFF261136.toInt(), 0xFF6B5585.toInt())
             }
         }
     }

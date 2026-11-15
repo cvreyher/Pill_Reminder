@@ -13,68 +13,69 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// Material 3 tonal scheme generated from the green seed color #268C5C.
+// Material 3 tonal scheme generated from the brand purple #6E5A83.
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF2B6A46),
+    primary = Color(0xFF6B5585),
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFB0F1C3),
-    onPrimaryContainer = Color(0xFF00210F),
-    secondary = Color(0xFF4F6354),
+    primaryContainer = Color(0xFFEDD9FF),
+    onPrimaryContainer = Color(0xFF261136),
+    secondary = Color(0xFF665A6F),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFD2E8D5),
-    onSecondaryContainer = Color(0xFF0C1F13),
-    tertiary = Color(0xFF3B6470),
+    secondaryContainer = Color(0xFFEDDDF5),
+    onSecondaryContainer = Color(0xFF211829),
+    tertiary = Color(0xFF805157),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFBFE9F8),
-    onTertiaryContainer = Color(0xFF001F27),
-    background = Color(0xFFF6FBF4),
-    onBackground = Color(0xFF171D19),
-    surface = Color(0xFFF6FBF4),
-    onSurface = Color(0xFF171D19),
-    surfaceVariant = Color(0xFFDCE5DB),
-    onSurfaceVariant = Color(0xFF414942),
-    outline = Color(0xFF717971),
-    outlineVariant = Color(0xFFC0C9C0),
+    tertiaryContainer = Color(0xFFFFD9DD),
+    onTertiaryContainer = Color(0xFF321017),
+    background = Color(0xFFFFF7FD),
+    onBackground = Color(0xFF1E1A20),
+    surface = Color(0xFFFFF7FD),
+    onSurface = Color(0xFF1E1A20),
+    surfaceVariant = Color(0xFFE9DFEB),
+    onSurfaceVariant = Color(0xFF4B454D),
+    outline = Color(0xFF7C757E),
+    outlineVariant = Color(0xFFCDC4CE),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF0F5EE),
-    surfaceContainer = Color(0xFFEAEFE9),
-    surfaceContainerHigh = Color(0xFFE5EAE3),
-    surfaceContainerHighest = Color(0xFFDFE4DD)
+    surfaceContainerLow = Color(0xFFFAF1FA),
+    surfaceContainer = Color(0xFFF4EBF4),
+    surfaceContainerHigh = Color(0xFFEEE6EE),
+    surfaceContainerHighest = Color(0xFFE8E0E8)
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF95D5A8),
-    onPrimary = Color(0xFF00391D),
-    primaryContainer = Color(0xFF0F5130),
-    onPrimaryContainer = Color(0xFFB0F1C3),
-    secondary = Color(0xFFB6CCB9),
-    onSecondary = Color(0xFF213527),
-    secondaryContainer = Color(0xFF374B3D),
-    onSecondaryContainer = Color(0xFFD2E8D5),
-    tertiary = Color(0xFFA3CDDB),
-    onTertiary = Color(0xFF033540),
-    tertiaryContainer = Color(0xFF214C57),
-    onTertiaryContainer = Color(0xFFBFE9F8),
-    background = Color(0xFF0F1511),
-    onBackground = Color(0xFFDFE4DD),
-    surface = Color(0xFF0F1511),
-    onSurface = Color(0xFFDFE4DD),
-    surfaceVariant = Color(0xFF414942),
-    onSurfaceVariant = Color(0xFFC0C9C0),
-    outline = Color(0xFF8A938A),
-    outlineVariant = Color(0xFF414942),
-    surfaceContainerLowest = Color(0xFF0A0F0C),
-    surfaceContainerLow = Color(0xFF171D19),
-    surfaceContainer = Color(0xFF1B211D),
-    surfaceContainerHigh = Color(0xFF252B27),
-    surfaceContainerHighest = Color(0xFF303631)
+    primary = Color(0xFFD8BDF2),
+    onPrimary = Color(0xFF3C2754),
+    primaryContainer = Color(0xFF533D6C),
+    onPrimaryContainer = Color(0xFFEDD9FF),
+    secondary = Color(0xFFD0C1D9),
+    onSecondary = Color(0xFF362C3F),
+    secondaryContainer = Color(0xFF4D4357),
+    onSecondaryContainer = Color(0xFFEDDDF5),
+    tertiary = Color(0xFFF3B7BE),
+    onTertiary = Color(0xFF4B252A),
+    tertiaryContainer = Color(0xFF653A40),
+    onTertiaryContainer = Color(0xFFFFD9DD),
+    background = Color(0xFF161217),
+    onBackground = Color(0xFFE9E0E8),
+    surface = Color(0xFF161217),
+    onSurface = Color(0xFFE9E0E8),
+    surfaceVariant = Color(0xFF4B454D),
+    onSurfaceVariant = Color(0xFFCDC4CE),
+    outline = Color(0xFF968E98),
+    outlineVariant = Color(0xFF4B454D),
+    surfaceContainerLowest = Color(0xFF110D12),
+    surfaceContainerLow = Color(0xFF1E1A20),
+    surfaceContainer = Color(0xFF231E24),
+    surfaceContainerHigh = Color(0xFF2D282E),
+    surfaceContainerHighest = Color(0xFF383339)
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MedicationTrackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    // Off: the app always uses its own purple instead of the wallpaper colors.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

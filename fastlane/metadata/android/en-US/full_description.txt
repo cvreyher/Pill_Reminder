@@ -7,10 +7,10 @@ MedicationTracker reliably reminds you to take your medication – or that of th
 <li><b>Reminders:</b> high-priority notifications on time, optionally audible even when the phone is muted, repeated until confirmed, and optionally shown like an alarm on the lock screen.</li>
 <li><b>German medication plan (BMP):</b> scan the DataMatrix code of the "Bundeseinheitlicher Medikationsplan" and save it as a plan – with plan history, active/inactive plans and replacing plans with a summary of new, changed and discontinued medication.</li>
 <li><b>For yourself or as a caregiver:</b> several people with their own plans, filters per person and automatic assignment of scanned plans.</li>
-<li><b>History and calendar</b> of all intakes.</li>
+<li><b>History and calendar:</b> adherence rate with daily bars, per-medication summary and every intake.</li>
 <li><b>Local drug database:</b> import a CSV list of PZN and names so plans that only contain the PZN are named automatically.</li>
 <li><b>Home screen widget</b> showing the next dose.</li>
-<li><b>Material 3 Expressive</b> design with dynamic color and dark mode.</li>
+<li><b>Material 3 Expressive</b> design with dark mode.</li>
 </ul>
 
 <b>Privacy</b>

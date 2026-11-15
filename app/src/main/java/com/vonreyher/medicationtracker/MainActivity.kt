@@ -271,6 +271,7 @@ fun MedicationTrackerApp(store: MedicationStore) {
                 )
                 Destination.History -> HistoryScreen(
                     history = store.history.filter { careMode || it.personId == Person.SELF_ID },
+                    medications = store.medications.filter { careMode || it.personId == Person.SELF_ID },
                     persons = persons,
                     careMode = careMode,
                     contentPadding = padding

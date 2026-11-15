@@ -1,5 +1,15 @@
 package com.vonreyher.medicationtracker.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import com.vonreyher.medicationtracker.Medication
+import java.time.LocalDateTime
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,7 +67,7 @@ private enum class HistoryView(val label: String) { List("Liste"), Calendar("Kal
 private enum class HistoryRange(val label: String, val days: Long?) {
     Week("7 Tage", 7),
     Month("30 Tage", 30),
-    All("Alle", null)
+    All("Gesamt", null)
 }
 
 private val DayFormatter = DateTimeFormatter.ofPattern("EEEE, d. MMMM", Locale.GERMAN)
@@ -68,6 +78,8 @@ private val MonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.GER
 @Composable
 fun HistoryScreen(
     history: List<IntakeEvent>,
+    /** All medication including stopped ones, to know what was scheduled on each day. */
+    medications: List<Medication>,
     persons: List<Person>,
     careMode: Boolean,
     contentPadding: PaddingValues
@@ -111,10 +123,19 @@ fun HistoryScreen(
                         onSelect = { range = it }
                     )
                 }
+                val personMedications = medications.filter { personId == null || it.personId == personId }
                 val from = range.days?.let { today.minusDays(it - 1) }
+                    ?: listOfNotNull(
+                        personMedications.mapNotNull { it.createdAt?.toLocalDate() }.minOrNull(),
+                        personEvents.minOfOrNull { it.takenAt.toLocalDate() }
+                    ).minOrNull()
+                    ?: today
                 val events = personEvents
-                    .filter { from == null || !it.takenAt.toLocalDate().isBefore(from) }
+                    .filter { !it.takenAt.toLocalDate().isBefore(from) }
                     .sortedByDescending { it.takenAt }
+                val stats = adherence(personMedications, personEvents, from, today, LocalDateTime.now())
+                item { AdherenceCard(stats, weekly = range == HistoryRange.All && stats.size > 31) }
+                medicationAdherence(stats, persons, careMode)
                 historyList(events, persons, careMode, today)
             }
             HistoryView.Calendar -> {
@@ -187,39 +208,6 @@ private fun LazyListScope.historyList(
     if (events.isEmpty()) {
         item { EmptyText("In diesem Zeitraum wurde noch nichts eingenommen.") }
         return
-    }
-
-    item { SectionTitle("Wie oft") }
-    item {
-        val frequency = events
-            .groupBy { it.personId to it.name }
-            .entries
-            .sortedByDescending { it.value.size }
-        OutlinedCard(
-            modifier = Modifier.padding(horizontal = 24.dp),
-            shape = MaterialTheme.shapes.extraLarge
-        ) {
-            frequency.forEachIndexed { index, (key, intakes) ->
-                if (index > 0) HorizontalDivider()
-                val last = intakes.maxOf { it.takenAt }
-                val person = persons.firstOrNull { it.id == key.first }.takeIf { careMode }
-                ListItem(
-                    headlineContent = { Text(key.second) },
-                    supportingContent = {
-                        Text(
-                            listOfNotNull(
-                                person?.fullName,
-                                "zuletzt am ${last.format(ShortDateFormatter)} um ${last.toLocalTime().formatted()} Uhr"
-                            ).joinToString(" · ")
-                        )
-                    },
-                    leadingContent = person?.let { { PersonAvatar(it) } },
-                    trailingContent = {
-                        Text("${intakes.size}×", style = MaterialTheme.typography.titleLargeEmphasized)
-                    }
-                )
-            }
-        }
     }
 
     item { SectionTitle("Verlauf") }
@@ -399,4 +387,225 @@ private fun EmptyText(text: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(24.dp)
     )
+}
+
+/** One scheduled dose on one day, and whether it was confirmed. */
+private data class DoseOutcome(val medication: Medication, val taken: Boolean)
+
+private data class DayAdherence(val day: LocalDate, val doses: List<DoseOutcome>) {
+    val scheduled get() = doses.size
+    val taken get() = doses.count { it.taken }
+}
+
+/**
+ * For each day from [from] to [to]: the doses that were scheduled back then and already due at
+ * [now], and whether each was confirmed that day.
+ */
+private fun adherence(
+    medications: List<Medication>,
+    history: List<IntakeEvent>,
+    from: LocalDate,
+    to: LocalDate,
+    now: LocalDateTime
+): List<DayAdherence> {
+    val takenByDay = history.filter { it.scheduledTime != null }
+        .groupBy { it.takenAt.toLocalDate() }
+        .mapValues { (_, events) -> events.map { it.medicationId }.toSet() }
+    return generateSequence(from) { it.plusDays(1) }.takeWhile { !it.isAfter(to) }.map { day ->
+        val taken = takenByDay[day].orEmpty()
+        val doses = medications
+            .filter { !it.asNeeded }
+            .filter { medication ->
+                val dueAt = day.atTime(medication.time)
+                medication.wasScheduledAt(dueAt) && !dueAt.isAfter(now)
+            }
+            .map { DoseOutcome(it, it.id in taken) }
+        DayAdherence(day, doses)
+    }.toList()
+}
+
+/** Bar fill: the validated purple steps of the dataviz check (the theme's own purples read too grey). */
+@Composable
+private fun chartColor(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFFA77FD6) else Color(0xFF7651A3)
+
+/**
+ * Share of confirmed doses as a hero number, with one bar per day (or per week for long ranges).
+ * Tapping a bar shows its numbers.
+ */
+@Composable
+private fun AdherenceCard(stats: List<DayAdherence>, weekly: Boolean) {
+    val scheduled = stats.sumOf { it.scheduled }
+    val taken = stats.sumOf { it.taken }
+    val bars = if (weekly) {
+        stats.groupBy { it.day.with(DayOfWeek.MONDAY) }.entries.toList().takeLast(26).map { (week, days) ->
+            Bar(
+                label = "KW ${week.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)}",
+                detail = "Woche ab ${week.format(ShortDateFormatter)}",
+                scheduled = days.sumOf { it.scheduled },
+                taken = days.sumOf { it.taken }
+            )
+        }
+    } else {
+        stats.map { day ->
+            Bar(
+                label = day.day.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.GERMAN).take(2),
+                detail = day.day.format(DayFormatter),
+                scheduled = day.scheduled,
+                taken = day.taken
+            )
+        }
+    }
+    var selected by remember(bars.size) { mutableStateOf<Int?>(null) }
+    val showLabels = bars.size <= 8
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Eingenommen", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (scheduled == 0) {
+                Text(
+                    "In diesem Zeitraum war noch nichts geplant.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                return@Column
+            }
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("${taken * 100 / scheduled} %", style = MaterialTheme.typography.displaySmallEmphasized)
+                Text(
+                    "· $taken von $scheduled",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+            }
+            // The tapped bar's numbers, in text colors (the bar color only marks the data).
+            Text(
+                text = selected?.let { bars.getOrNull(it) }?.let { bar ->
+                    if (bar.scheduled == 0) "${bar.detail}: nichts geplant"
+                    else "${bar.detail}: ${bar.taken} von ${bar.scheduled} eingenommen"
+                } ?: "Tippe auf einen Balken für Details",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            BarChart(bars, selected, onSelect = { selected = if (selected == it) null else it }, showLabels = showLabels)
+            if (!showLabels && bars.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth()) {
+                    Text(bars.first().detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                    Text(bars.last().detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+private data class Bar(val label: String, val detail: String, val scheduled: Int, val taken: Int)
+
+private val ChartHeight = 112.dp
+
+@Composable
+private fun BarChart(bars: List<Bar>, selected: Int?, onSelect: (Int) -> Unit, showLabels: Boolean) {
+    val fill = chartColor()
+    val track = MaterialTheme.colorScheme.surfaceContainerHighest
+    val gap = if (bars.size > 14) 2.dp else 8.dp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = bars.joinToString("; ") { "${it.detail}: ${it.taken} von ${it.scheduled}" }
+            },
+        horizontalArrangement = Arrangement.spacedBy(gap)
+    ) {
+        bars.forEachIndexed { index, bar ->
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClickLabel = bar.detail) { onSelect(index) },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(ChartHeight),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    val share = if (bar.scheduled == 0) 0f else bar.taken.toFloat() / bar.scheduled
+                    val shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 2.dp, bottomEnd = 2.dp)
+                    // Recessive full-height track, the share in the data color on top.
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .background(track, shape)
+                    )
+                    if (share > 0f) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(share)
+                                .background(fill.copy(alpha = if (selected == null || selected == index) 1f else 0.45f), shape)
+                        )
+                    }
+                }
+                if (showLabels) {
+                    Text(bar.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+/** Per medication: confirmed of scheduled doses in the period – the table view of the chart. */
+private fun LazyListScope.medicationAdherence(stats: List<DayAdherence>, persons: List<Person>, careMode: Boolean) {
+    val rows = stats.flatMap { it.doses }
+        .groupBy { it.medication.personId to it.medication.name }
+        .map { (key, doses) -> Triple(key, doses.count { it.taken }, doses.size) }
+        .sortedWith(compareBy({ it.second.toFloat() / it.third }, { it.first.second }))
+    if (rows.isEmpty()) return
+    items(rows, key = { "${it.first.first}/${it.first.second}" }) { (key, taken, scheduled) ->
+        val person = persons.firstOrNull { it.id == key.first }.takeIf { careMode }
+        val complete = taken == scheduled
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = if (complete) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = if (complete) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (complete) {
+                            Icon(painterResource(R.drawable.ic_check), contentDescription = "Vollständig")
+                        } else {
+                            Text("${taken * 100 / scheduled}%", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(key.second, style = MaterialTheme.typography.titleMedium)
+                    person?.let {
+                        Text(it.fullName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                Text("$taken/$scheduled", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
 }

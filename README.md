@@ -27,13 +27,13 @@ Nie wieder eine Einnahme vergessen.
 - **Medikament hinzufügen** – Vollbild-Formular für Handelsname, Wirkstoff, Darreichungsform, PZN, Dosis, Einnahmezeiten (morgens/mittags/abends/nachts oder eigene Uhrzeiten), Hinweise und Grund. Beim Tippen schlägt die App passende Medikamente aus der lokalen Arzneimitteldatenbank vor; die PZN lässt sich per Barcode oder securPharm-Code von der Packung scannen.
 - **Bei Bedarf** – Medikamente ohne feste Uhrzeit (z. B. Bedarfsmedikation aus dem Plan) erscheinen in einem eigenen Abschnitt und können beliebig oft bestätigt werden.
 - **Wirkstoff und Hinweise** – Die Vollbildansicht zeigt Handelsname, Wirkstoff, Darreichungsform sowie Hinweise und Einnahmegrund aus dem Medikationsplan.
-- **Verlauf** – Wann wurde was eingenommen und wie oft – für 7 Tage, 30 Tage oder insgesamt, im Pflege-Modus pro Person.
+- **Verlauf** – Statistik mit Einnahmequote und Balken pro Tag, Auswertung pro Medikament (z. B. 13/14) und alle Einnahmen – für 7 Tage, 30 Tage oder gesamt, im Pflege-Modus pro Person.
 - **Erinnerungen** – Pünktliche Benachrichtigungen mit hoher Priorität zu jeder geplanten Einnahme. Ein Tipp öffnet direkt den Bestätigen-Bildschirm (auch über dem Sperrbildschirm), „In 10 Min. erinnern“ verschiebt die Erinnerung. Optional erscheint sie bei gesperrtem Handy wie ein Wecker im Vollbild.
 - **Homescreen-Widget** – Ein Widget in Blumenform zeigt die nächste Einnahme und den Tagesfortschritt.
 - **Arzneimittelinfos der EMA** – Optional lassen sich Wirkstoffe, Darreichungsform und Klassifikation über die EMA-Datenbank abfragen (siehe unten).
 - **Einstellungen** – Name, Modus, Personen und EMA-Zugang lassen sich jederzeit ändern.
 
-- **Material 3 Expressive** – Die Oberfläche nutzt ausschließlich Komponenten aus der [Android UI Gallery](https://developer.android.com/design/ui/gallery) im Expressive-Stil (u. a. gewellte Fortschrittsanzeige, Material Shapes, Button Groups) inklusive Dynamic Color und Dark Mode.
+- **Material 3 Expressive** – Die Oberfläche nutzt ausschließlich Komponenten aus der [Android UI Gallery](https://developer.android.com/design/ui/gallery) im Expressive-Stil (u. a. gewellte Fortschrittsanzeige, Material Shapes, Button Groups) in eigenem Lila mit Dark Mode.
 
 ## Medikationsplan scannen
 
@@ -90,8 +90,8 @@ Das Logo **„Bestätigt“** ist eine Kapsel, die zugleich der Schieber zum Bes
 
 | | |
 |---|---|
-| Hauptfarbe | Grün `#2B6A46` |
-| Akzent | Hellgrün `#B0F1C3`, Weiß für den Schieberknopf |
+| Hauptfarbe | Lila `#6E5A83` |
+| Akzent | Helles Lila `#EDD9FF`, Weiß für den Schieberknopf |
 | Dateien | `design/logo/` (SVG-Master in Farbe und Schwarz, App-Icon, Konzeptbogen, Testblatt) |
 | App-Icons | Adaptives Icon und Themen-Icon (`res/drawable/ic_launcher_*`), Benachrichtigungs-Icon als Kleinst-Version (`ic_stat_logo`) |
 
