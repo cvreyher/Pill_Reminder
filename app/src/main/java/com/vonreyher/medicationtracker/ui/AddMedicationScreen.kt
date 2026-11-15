@@ -83,8 +83,8 @@ private val Slots = listOf(
 )
 
 /**
- * Full-screen form for a new medication. Every text field can be typed or read from the package
- * with the camera; the PZN comes from the package barcode.
+ * Full-screen form for a new medication. The name can be picked from the local drug database while
+ * typing; the PZN can be scanned from the package barcode and fills in the name.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -162,32 +162,15 @@ fun AddMedicationScreen(
         }
     }
 
-    when (val field = scanning) {
-        null -> Unit
-        Field.Pzn -> {
-            PackageBarcodeScreen(
-                onPzn = {
-                    pzn = it
-                    scanning = null
-                },
-                onClose = { scanning = null }
-            )
-            return
-        }
-        else -> {
-            TextCaptureScreen(
-                fieldLabel = field.label,
-                onPick = { text ->
-                    // Longer texts are often printed over several lines, so these are appended.
-                    val current = valueOf(field)
-                    val appendable = field == Field.Instructions || field == Field.Reason
-                    set(field, if (appendable && current.isNotBlank()) "$current $text" else text)
-                    scanning = null
-                },
-                onClose = { scanning = null }
-            )
-            return
-        }
+    if (scanning == Field.Pzn) {
+        PackageBarcodeScreen(
+            onPzn = {
+                pzn = it
+                scanning = null
+            },
+            onClose = { scanning = null }
+        )
+        return
     }
 
     BackHandler(onBack = onClose)
@@ -263,7 +246,7 @@ fun AddMedicationScreen(
             }
 
             SectionLabel("Medikament")
-            ScanTextField(Field.Name, name, { name = it }, onScan = { scanning = Field.Name }, placeholder = "z. B. Ramipril HEXAL 5 mg")
+            InputField(Field.Name, name, { name = it }, placeholder = "z. B. Ramipril HEXAL 5 mg")
             if (suggestions.isNotEmpty()) {
                 OutlinedCard(shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
                     suggestions.forEach { drug ->
@@ -279,8 +262,8 @@ fun AddMedicationScreen(
                     }
                 }
             }
-            ScanTextField(Field.Ingredient, ingredient, { ingredient = it }, onScan = { scanning = Field.Ingredient }, placeholder = "z. B. Ramipril 5 mg")
-            ScanTextField(Field.Form, form, { form = it }, onScan = { scanning = Field.Form }, placeholder = "z. B. Tabletten")
+            InputField(Field.Ingredient, ingredient, { ingredient = it }, placeholder = "z. B. Ramipril 5 mg")
+            InputField(Field.Form, form, { form = it }, placeholder = "z. B. Tabletten")
             OutlinedTextField(
                 value = pzn,
                 onValueChange = { value -> pzn = value.filter(Char::isDigit).take(8) },
@@ -300,7 +283,7 @@ fun AddMedicationScreen(
             )
 
             SectionLabel("Einnahme")
-            ScanTextField(Field.Dosage, dosage, { dosage = it }, onScan = { scanning = Field.Dosage }, placeholder = "z. B. 1 Tablette")
+            InputField(Field.Dosage, dosage, { dosage = it }, placeholder = "z. B. 1 Tablette")
             ListItem(
                 modifier = Modifier.toggleable(value = asNeeded, role = Role.Switch, onValueChange = { asNeeded = it }),
                 headlineContent = { Text("Bei Bedarf") },
@@ -355,13 +338,12 @@ fun AddMedicationScreen(
             }
 
             SectionLabel("Hinweise")
-            ScanTextField(
+            InputField(
                 Field.Instructions, instructions, { instructions = it },
-                onScan = { scanning = Field.Instructions },
                 placeholder = "z. B. auf nüchternen Magen",
                 singleLine = false
             )
-            ScanTextField(Field.Reason, reason, { reason = it }, onScan = { scanning = Field.Reason }, placeholder = "z. B. Blutdruck")
+            InputField(Field.Reason, reason, { reason = it }, placeholder = "z. B. Blutdruck")
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -389,11 +371,10 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun ScanTextField(
+private fun InputField(
     field: Field,
     value: String,
     onValueChange: (String) -> Unit,
-    onScan: () -> Unit,
     placeholder: String,
     singleLine: Boolean = true
 ) {
@@ -405,11 +386,6 @@ private fun ScanTextField(
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 2,
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-        trailingIcon = {
-            IconButton(onClick = onScan) {
-                Icon(painterResource(R.drawable.ic_document_scanner), contentDescription = "${field.label} von der Packung scannen")
-            }
-        },
         shape = MaterialTheme.shapes.large,
         modifier = Modifier.fillMaxWidth()
     )

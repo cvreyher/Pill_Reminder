@@ -1,0 +1,32 @@
+# Metadata for the F-Droid inclusion request (copy to metadata/ in https://gitlab.com/fdroid/fdroiddata).
+Categories:
+  - Science & Education
+License: GPL-3.0-only
+AuthorName: cvreyher
+SourceCode: https://github.com/cvreyher/Pill_Reminder
+IssueTracker: https://github.com/cvreyher/Pill_Reminder/issues
+
+AutoName: MedicationTracker
+
+RepoType: git
+Repo: https://github.com/cvreyher/Pill_Reminder.git
+
+# The optional medicine lookup queries the EMA Product Management Service API (requires the
+# user's own EMA credentials); everything else works offline.
+AntiFeatures:
+  NonFreeNet:
+    de: Optionale Abfrage der EMA-Arzneimitteldatenbank (eigene Zugangsdaten nötig).
+    en-US: Optional lookup in the EMA medicines database (requires own credentials).
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 1
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1

@@ -1,0 +1,1 @@
+Erste Version: Tagesübersicht, Erinnerungen, Bestätigen per Wischen, Scan des Bundeseinheitlichen Medikationsplans, Pflege-Modus, Verlauf, Widget.

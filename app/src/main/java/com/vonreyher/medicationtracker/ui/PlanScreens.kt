@@ -467,11 +467,11 @@ fun ScanPreviewScreen(
                             text = if (unnamed == 1) {
                                 "Ein Medikament ist auf dem Plan nur mit seiner PZN hinterlegt – so sieht es der " +
                                     "Medikationsplan vor. Den Namen kannst du nach dem Speichern über „Bearbeiten“ ergänzen " +
-                                    "oder von der Packung scannen; die App merkt ihn sich für künftige Pläne."
+                                    "oder per Arzneimitteldatenbank; die App merkt ihn sich für künftige Pläne."
                             } else {
                                 "$unnamed Medikamente sind auf dem Plan nur mit ihrer PZN hinterlegt – so sieht es der " +
                                     "Medikationsplan vor. Die Namen kannst du nach dem Speichern über „Bearbeiten“ ergänzen " +
-                                    "oder von der Packung scannen; die App merkt sie sich für künftige Pläne."
+                                    "oder per Arzneimitteldatenbank; die App merkt sie sich für künftige Pläne."
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(20.dp)

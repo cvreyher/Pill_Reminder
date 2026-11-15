@@ -1,0 +1,20 @@
+MedicationTracker erinnert dich zuverlässig an deine Medikamente – oder an die der Menschen, um die du dich kümmerst.
+
+<b>Funktionen</b>
+<ul>
+<li><b>Tagesübersicht:</b> Uhr mit Tagesfortschritt, alle Einnahmen in zeitlicher Reihenfolge und eine Linie für „jetzt“. Nach links wischen zeigt vergangene Tage – was genommen und was vergessen wurde.</li>
+<li><b>Bestätigen per Wischen:</b> Ein Tipp auf ein Medikament öffnet den Vollbild-Bildschirm mit Dosis, Wirkstoff und Hinweisen; die Einnahme wird mit einem Schieberegler bestätigt.</li>
+<li><b>Erinnerungen:</b> Pünktliche Benachrichtigungen mit hoher Priorität, auf Wunsch auch mit Ton bei stummgeschaltetem Handy, wiederholt bis zur Bestätigung und optional als Wecker auf dem Sperrbildschirm.</li>
+<li><b>Bundeseinheitlicher Medikationsplan:</b> Den DataMatrix-Code des BMP scannen und als Plan speichern – mit Planverlauf, aktiv/inaktiv und dem Ersetzen durch neue Pläne inklusive Änderungsübersicht (neu, geändert, abgesetzt).</li>
+<li><b>Für mich oder als Pflegekraft:</b> Mehrere Personen mit eigenen Plänen, Filter pro Person und automatische Zuordnung gescannter Pläne.</li>
+<li><b>Verlauf und Kalender:</b> Wann was eingenommen wurde und wie oft.</li>
+<li><b>Lokale Arzneimitteldatenbank:</b> Eine CSV-Liste mit PZN und Namen importieren, damit Pläne, die nur PZN enthalten, automatisch benannt werden.</li>
+<li><b>Homescreen-Widget</b> mit der nächsten Einnahme.</li>
+<li><b>Material 3 Expressive</b> mit Dynamic Color und Dark Mode.</li>
+</ul>
+
+<b>Datenschutz</b>
+Alle Daten bleiben auf dem Gerät. Es gibt kein Konto, keine Werbung und kein Tracking. Nur die optionale Abfrage der EMA-Arzneimitteldatenbank sendet den Namen eines Medikaments an die Europäische Arzneimittel-Agentur.
+
+<b>Hinweis</b>
+Die App ersetzt keine ärztliche oder pharmazeutische Beratung.

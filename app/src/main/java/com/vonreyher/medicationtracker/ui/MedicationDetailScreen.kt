@@ -364,7 +364,7 @@ private fun MissingNameCard(onEdit: () -> Unit, modifier: Modifier = Modifier) {
             Text("Name fehlt", style = MaterialTheme.typography.titleMediumEmphasized)
             Text(
                 "Der Medikationsplan enthält für dieses Medikament nur die PZN. Gib den Namen einmal ein oder " +
-                    "scanne ihn von der Packung – die App merkt ihn sich für alle weiteren Pläne.",
+                    "importiere eine Arzneimitteldatenbank – die App merkt ihn sich für alle weiteren Pläne.",
                 style = MaterialTheme.typography.bodyMedium
             )
             FilledTonalButton(onClick = onEdit) {

@@ -1,13 +1,17 @@
 package com.vonreyher.medicationtracker.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Rect
+import android.net.Uri
 import android.util.Size
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
@@ -40,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,14 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
 import com.vonreyher.medicationtracker.R
 import com.vonreyher.medicationtracker.data.BmpPage
 import com.vonreyher.medicationtracker.data.BmpParser
-import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import zxingcpp.BarcodeReader
 import java.util.concurrent.Executors
 
 /**
@@ -68,9 +72,22 @@ import java.util.concurrent.Executors
  */
 private val AnalysisSize = Size(2560, 1920)
 
+/** Photos are decoded at most this large; enough for the DataMatrix, small enough for memory. */
+private const val MaxPhotoSide = 4000
+
+private fun dataMatrixReader() = BarcodeReader(
+    BarcodeReader.Options(
+        formats = setOf(BarcodeReader.Format.DATA_MATRIX),
+        tryHarder = true,
+        tryRotate = true,
+        tryInvert = true
+    )
+)
+
 /**
  * Full-screen scanner for the DataMatrix code of a Bundeseinheitlicher Medikationsplan.
- * Scans live from the camera or from a photo picked from the gallery.
+ * Scans live from the camera or from a photo picked from the gallery, using the open-source
+ * ZXing-cpp reader.
  *
  * [onPage] receives every recognised plan page and returns an error message to show,
  * or null if the page was accepted.
@@ -84,6 +101,7 @@ fun ScannerScreen(
     BackHandler(onBack = onClose)
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val currentOnPage by rememberUpdatedState(onPage)
     var hint by remember { mutableStateOf<String?>(null) }
     var torchOn by remember { mutableStateOf(false) }
@@ -93,26 +111,16 @@ fun ScannerScreen(
                 PackageManager.PERMISSION_GRANTED
         )
     }
-
-    val scanner = remember {
-        BarcodeScanning.getClient(
-            BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_DATA_MATRIX)
-                .build()
-        )
-    }
-    DisposableEffect(scanner) { onDispose { scanner.close() } }
-
     // Set once a page was accepted so that following frames don't report it again.
     var accepted by remember { mutableStateOf(false) }
 
-    fun handle(barcodes: List<Barcode>, reportMissing: Boolean) {
+    fun handle(results: List<BarcodeReader.Result>, reportMissing: Boolean) {
         if (accepted) return
-        if (barcodes.isEmpty()) {
+        if (results.isEmpty()) {
             if (reportMissing) hint = "Im Foto wurde kein DataMatrix-Code gefunden."
             return
         }
-        val page = barcodes.firstNotNullOfOrNull { BmpParser.parseOrNull(it.rawBytes, it.rawValue) }
+        val page = results.firstNotNullOfOrNull { BmpParser.parseOrNull(it.bytes, it.text) }
         if (page == null) {
             hint = "Dieser Code ist kein Bundeseinheitlicher Medikationsplan."
             return
@@ -133,15 +141,12 @@ fun ScannerScreen(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        val image = try {
-            InputImage.fromFilePath(context, uri)
-        } catch (_: IOException) {
-            hint = "Das Foto konnte nicht geöffnet werden."
-            return@rememberLauncherForActivityResult
+        scope.launch {
+            val results = withContext(Dispatchers.Default) {
+                decodePhoto(context, uri)?.let { bitmap -> dataMatrixReader().read(bitmap, Rect(), 0) }
+            }
+            if (results == null) hint = "Das Foto konnte nicht geöffnet werden." else handle(results, reportMissing = true)
         }
-        scanner.process(image)
-            .addOnSuccessListener { handle(it, reportMissing = true) }
-            .addOnFailureListener { hint = "Das Foto konnte nicht gelesen werden." }
     }
 
     Scaffold(
@@ -201,8 +206,7 @@ fun ScannerScreen(
             if (hasCameraPermission) {
                 CameraPreview(
                     torchOn = torchOn,
-                    onBarcodes = { handle(it, reportMissing = false) },
-                    scanner = scanner
+                    onResults = { handle(it, reportMissing = false) }
                 )
                 Box(
                     Modifier
@@ -230,17 +234,27 @@ fun ScannerScreen(
     }
 }
 
-@androidx.annotation.OptIn(ExperimentalGetImage::class)
+/** Decodes a picked photo, downsampled only when it is larger than [MaxPhotoSide]. */
+private fun decodePhoto(context: Context, uri: Uri): Bitmap? = runCatching {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+    var sample = 1
+    while (maxOf(bounds.outWidth, bounds.outHeight) / sample > MaxPhotoSide) sample *= 2
+    context.contentResolver.openInputStream(uri)?.use {
+        BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+    }
+}.getOrNull()
+
 @Composable
 private fun CameraPreview(
     torchOn: Boolean,
-    onBarcodes: (List<Barcode>) -> Unit,
-    scanner: com.google.mlkit.vision.barcode.BarcodeScanner
+    onResults: (List<BarcodeReader.Result>) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val currentOnBarcodes by rememberUpdatedState(onBarcodes)
+    val currentOnResults by rememberUpdatedState(onResults)
     val executor = remember { Executors.newSingleThreadExecutor() }
+    val reader = remember { dataMatrixReader() }
 
     val controller = remember {
         LifecycleCameraController(context).apply {
@@ -248,21 +262,13 @@ private fun CameraPreview(
             imageAnalysisBackpressureStrategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
             imageAnalysisResolutionSelector = ResolutionSelector.Builder()
                 .setResolutionStrategy(
-                    ResolutionStrategy(
-                        AnalysisSize,
-                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
-                    )
+                    ResolutionStrategy(AnalysisSize, ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)
                 )
                 .build()
+            val mainExecutor = ContextCompat.getMainExecutor(context)
             setImageAnalysisAnalyzer(executor) { proxy ->
-                val mediaImage = proxy.image
-                if (mediaImage == null) {
-                    proxy.close()
-                    return@setImageAnalysisAnalyzer
-                }
-                scanner.process(InputImage.fromMediaImage(mediaImage, proxy.imageInfo.rotationDegrees))
-                    .addOnSuccessListener { currentOnBarcodes(it) }
-                    .addOnCompleteListener { proxy.close() }
+                val results = proxy.use { reader.read(it) }
+                if (results.isNotEmpty()) mainExecutor.execute { currentOnResults(results) }
             }
         }
     }
