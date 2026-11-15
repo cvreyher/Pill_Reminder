@@ -30,7 +30,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -88,12 +90,15 @@ fun MedicationDetailScreen(
     onMarkNotTaken: () -> Unit,
     /** Null where the time can't be changed, e.g. when opened from a reminder. */
     onChangeTime: (() -> Unit)?,
-    onEdit: (() -> Unit)? = null
+    onEdit: (() -> Unit)? = null,
+    /** Stops the medication from now on; null where that isn't offered (e.g. from a reminder). */
+    onDiscontinue: (() -> Unit)? = null
 ) {
     BackHandler(onBack = onClose)
 
     val sound = ConfirmationSound.get(LocalContext.current)
     var showInfo by remember { mutableStateOf(false) }
+    var confirmDiscontinue by remember { mutableStateOf(false) }
     val iconRotation = remember { Animatable(0f) }
     val currentOnConfirmTaken by rememberUpdatedState(onConfirmTaken)
     val currentOnClose by rememberUpdatedState(onClose)
@@ -173,6 +178,11 @@ fun MedicationDetailScreen(
                         if (onEdit != null) {
                             IconButton(onClick = onEdit) {
                                 Icon(painterResource(R.drawable.ic_edit), contentDescription = "Bearbeiten")
+                            }
+                        }
+                        if (onDiscontinue != null) {
+                            IconButton(onClick = { confirmDiscontinue = true }) {
+                                Icon(painterResource(R.drawable.ic_delete), contentDescription = "Absetzen")
                             }
                         }
                         IconButton(onClick = { showInfo = true }) {
@@ -338,6 +348,27 @@ fun MedicationDetailScreen(
                 }
             }
         }
+    }
+
+    if (confirmDiscontinue && onDiscontinue != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDiscontinue = false },
+            icon = { Icon(painterResource(R.drawable.ic_delete), contentDescription = null) },
+            title = { Text("${medication.name} absetzen?") },
+            text = {
+                Text(
+                    "Das Medikament erscheint ab jetzt nicht mehr im Tagesplan und es gibt keine Erinnerungen mehr. " +
+                        "Der Verlauf und die vergangenen Tage bleiben erhalten."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDiscontinue = false
+                    onDiscontinue()
+                }) { Text("Absetzen", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirmDiscontinue = false }) { Text("Abbrechen") } }
+        )
     }
 
     if (showInfo) {

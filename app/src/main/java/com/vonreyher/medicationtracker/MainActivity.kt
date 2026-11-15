@@ -256,7 +256,7 @@ fun MedicationTrackerApp(store: MedicationStore) {
                     onSelectPerson = { selectedPersonId = it },
                     intakesToday = { store.intakesToday(it.id).size },
                     history = store.history.filter { careMode || it.personId == Person.SELF_ID },
-                    scheduledSince = store::scheduledSince,
+                    pastMedications = store.medications.filter { careMode || it.personId == Person.SELF_ID },
                     now = now,
                     listState = todayListState,
                     contentPadding = padding,
@@ -304,7 +304,20 @@ fun MedicationTrackerApp(store: MedicationStore) {
                             onConfirmTaken = { confirmIntake(medication) },
                             onMarkNotTaken = { store.undoLatestIntakeToday(medication) },
                             onChangeTime = { timePickerFor = medication.id },
-                            onEdit = { fullScreen = FullScreen.EditMedication(medication.id) }
+                            onEdit = { fullScreen = FullScreen.EditMedication(medication.id) },
+                            onDiscontinue = {
+                                store.discontinueMedication(medication.id)
+                                fullScreen = null
+                                scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "${medication.name} abgesetzt",
+                                        actionLabel = "Rückgängig",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) store.resumeMedication(medication.id)
+                                }
+                            }
                         )
                     }
                 }

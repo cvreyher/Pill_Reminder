@@ -27,8 +27,14 @@ data class Medication(
     /** Pharmazentralnummer of the package. */
     val pzn: String? = null,
     /** When the dose was added; only doses due after this moment can count as missed. */
-    val createdAt: LocalDateTime? = null
+    val createdAt: LocalDateTime? = null,
+    /** When the medication was stopped; it then leaves the schedule but stays in the history. */
+    val discontinuedAt: LocalDateTime? = null
 ) {
+    /** Whether the dose at [dueAt] was part of the schedule: added before it and not yet stopped. */
+    fun wasScheduledAt(dueAt: LocalDateTime): Boolean =
+        createdAt != null && !dueAt.isBefore(createdAt) && (discontinuedAt == null || dueAt.isBefore(discontinuedAt))
+
     val asNeeded: Boolean get() = time == null
 
     /** Plans that only carry the PZN give the medication a placeholder name until it is named. */

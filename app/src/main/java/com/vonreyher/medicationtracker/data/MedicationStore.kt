@@ -71,14 +71,12 @@ class MedicationStore private constructor(private val file: File) {
 
     fun person(id: String): Person? = persons.firstOrNull { it.id == id }
 
-    /** When a dose became part of the schedule; doses due before this moment never count as missed. */
-    fun scheduledSince(medication: Medication): LocalDateTime? = medication.createdAt
 
     /** Medication that is currently scheduled: added by hand or from an active plan. */
     val activeMedications: List<Medication>
         get() {
             val inactivePlans = plans.filter { !it.active }.map { it.id }.toSet()
-            return medications.filter { it.planId == null || it.planId !in inactivePlans }
+            return medications.filter { it.discontinuedAt == null && (it.planId == null || it.planId !in inactivePlans) }
         }
 
     /** Starts a new day: yesterday's intakes no longer count as taken. */
@@ -328,6 +326,21 @@ class MedicationStore private constructor(private val file: File) {
         return renamed
     }
 
+    /**
+     * Stops a medication from now on: it leaves the schedule, reminders and widget, while its
+     * history and the past days keep showing it.
+     */
+    fun discontinueMedication(medicationId: Int) {
+        replaceMedication(medicationId) { it.copy(discontinuedAt = LocalDateTime.now()) }
+        persist()
+    }
+
+    /** Undoes [discontinueMedication]. */
+    fun resumeMedication(medicationId: Int) {
+        replaceMedication(medicationId) { it.copy(discontinuedAt = null) }
+        persist()
+    }
+
     fun deleteMedication(medicationId: Int) {
         medications.removeAll { it.id == medicationId }
         persist()
@@ -486,7 +499,8 @@ class MedicationStore private constructor(private val file: File) {
                     instructions = json.optStringOrNull("instructions"),
                     reason = json.optStringOrNull("reason"),
                     pzn = json.optStringOrNull("pzn"),
-                    createdAt = json.optStringOrNull("createdAt")?.let(LocalDateTime::parse)
+                    createdAt = json.optStringOrNull("createdAt")?.let(LocalDateTime::parse),
+                    discontinuedAt = json.optStringOrNull("discontinuedAt")?.let(LocalDateTime::parse)
                 )
             }
             root.optJSONArray("plans")?.forEachObject { json -> plans += json.toPlan() }
@@ -555,7 +569,8 @@ class MedicationStore private constructor(private val file: File) {
                         .putOpt("instructions", medication.instructions)
                         .putOpt("reason", medication.reason)
                         .putOpt("pzn", medication.pzn)
-                        .putOpt("createdAt", medication.createdAt?.toString()))
+                        .putOpt("createdAt", medication.createdAt?.toString())
+                        .putOpt("discontinuedAt", medication.discontinuedAt?.toString()))
                 }
             })
             .put("plans", JSONArray().apply { plans.forEach { put(it.toJson()) } })

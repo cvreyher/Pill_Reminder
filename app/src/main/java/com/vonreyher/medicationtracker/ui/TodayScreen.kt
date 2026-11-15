@@ -93,7 +93,8 @@ fun TodayScreen(
     onSelectPerson: (String?) -> Unit,
     intakesToday: (Medication) -> Int,
     history: List<IntakeEvent>,
-    scheduledSince: (Medication) -> LocalDateTime?,
+    /** All medication including stopped ones, so past days show what was scheduled back then. */
+    pastMedications: List<Medication>,
     now: LocalTime,
     listState: LazyListState,
     contentPadding: PaddingValues,
@@ -140,13 +141,12 @@ fun TodayScreen(
             } else {
                 PastDayPage(
                     day = dayOf(page),
-                    medications = medications,
+                    medications = pastMedications,
                     persons = persons,
                     careMode = careMode,
                     selectedPersonId = selectedPersonId,
                     onSelectPerson = onSelectPerson,
                     history = history,
-                    scheduledSince = scheduledSince,
                     contentPadding = pagePadding
                 )
             }
@@ -213,7 +213,6 @@ private fun PastDayPage(
     selectedPersonId: String?,
     onSelectPerson: (String?) -> Unit,
     history: List<IntakeEvent>,
-    scheduledSince: (Medication) -> LocalDateTime?,
     contentPadding: PaddingValues
 ) {
     val forPerson = { personId: String -> selectedPersonId == null || personId == selectedPersonId }
@@ -222,8 +221,8 @@ private fun PastDayPage(
         .mapValues { (_, intakes) -> intakes.minOf { it.takenAt }.toLocalTime() }
     val scheduled = medications
         .filter { !it.asNeeded && forPerson(it.personId) }
-        // Only doses that were already scheduled at their time count – nothing before setup is "missed".
-        .filter { medication -> scheduledSince(medication)?.let { !day.atTime(medication.time).isBefore(it) } ?: false }
+        // Only doses that were scheduled at their time count: nothing before setup or after stopping is "missed".
+        .filter { medication -> medication.wasScheduledAt(day.atTime(medication.time)) }
         .sortedBy { it.time }
     val done = scheduled.count { it.id in takenAt }
     val missed = scheduled.size - done

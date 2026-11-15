@@ -17,7 +17,10 @@ android {
 
     // Release signing for the GitHub builds. The keystore comes from CI secrets via environment
     // variables; without them (e.g. on F-Droid, which signs itself) the release APK stays unsigned.
-    val releaseKeystore = System.getenv("RELEASE_KEYSTORE_FILE")?.let(::file)?.takeIf { it.exists() }
+    val releaseKeystore = System.getenv("RELEASE_KEYSTORE_FILE")
+        ?.takeIf { it.isNotBlank() }
+        ?.let(::file)
+        ?.takeIf { it.exists() }
     signingConfigs {
         if (releaseKeystore != null) {
             create("release") {
