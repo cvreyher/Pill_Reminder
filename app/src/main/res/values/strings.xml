@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Nächste Einnahme</string>
+    <string name="widget_description">Zeigt, was als Nächstes eingenommen werden muss und wie viel heute schon erledigt ist.</string>
+</resources>

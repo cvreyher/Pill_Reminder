@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logo "Bestätigt": the capsule is also the slide-to-confirm switch, switched on = taken. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:pivotX="128"
+        android:pivotY="128"
+        android:rotation="-45"
+        android:scaleX="0.29"
+        android:scaleY="0.29"
+        android:translateX="-74.61"
+        android:translateY="-73.39">
+        <path
+            android:fillColor="#B0F1C3"
+            android:fillType="evenOdd"
+            android:pathData="M76,80 H180 A48,48 0 0 1 180,176 H76 A48,48 0 0 1 76,80 Z M180,94 A34,34 0 1 0 180,162 A34,34 0 1 0 180,94 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M162,128 A18,18 0 1 0 198,128 A18,18 0 1 0 162,128 Z" />
+    </group>
+</vector>

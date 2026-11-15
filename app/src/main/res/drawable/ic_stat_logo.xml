@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification icon: small-size cut of the logo with a larger hole and thumb. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group
+        android:pivotX="128"
+        android:pivotY="128"
+        android:rotation="-45"
+        android:scaleX="0.11"
+        android:scaleY="0.11"
+        android:translateX="-116.23"
+        android:translateY="-115.77">
+        <path
+            android:fillColor="@android:color/white"
+            android:fillType="evenOdd"
+            android:pathData="M76,80 H180 A48,48 0 0 1 180,176 H76 A48,48 0 0 1 76,80 Z M180,90 A38,38 0 1 0 180,166 A38,38 0 1 0 180,90 Z" />
+        <path
+            android:fillColor="@android:color/white"
+            android:pathData="M158,128 A22,22 0 1 0 202,128 A22,22 0 1 0 158,128 Z" />
+    </group>
+</vector>
