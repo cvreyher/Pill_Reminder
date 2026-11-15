@@ -3,10 +3,11 @@ Categories:
   - Science & Education
 License: GPL-3.0-only
 AuthorName: cvreyher
+WebSite: https://medikamentenwecker.vonreyher.com
 SourceCode: https://github.com/cvreyher/Pill_Reminder
 IssueTracker: https://github.com/cvreyher/Pill_Reminder/issues
 
-AutoName: MedicationTracker
+AutoName: Medikamentenwecker
 
 RepoType: git
 Repo: https://github.com/cvreyher/Pill_Reminder.git

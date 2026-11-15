@@ -1,4 +1,4 @@
-MedicationTracker reliably reminds you to take your medication – or that of the people you care for. The app is in German.
+Medikamentenwecker reliably reminds you to take your medication – or that of the people you care for. The app is in German.
 
 <b>Features</b>
 <ul>
@@ -18,3 +18,5 @@ All data stays on the device. No account, no ads, no tracking. Only the optional
 
 <b>Note</b>
 The app does not replace medical or pharmaceutical advice.
+
+Website: https://medikamentenwecker.vonreyher.com

@@ -1,8 +1,10 @@
-# MedicationTracker
+# Medikamentenwecker
+
+🌐 **Website:** [medikamentenwecker.vonreyher.com](https://medikamentenwecker.vonreyher.com)
 
 **Eine Open-Source-Android-App zur Medikamentenerinnerung und Einnahmekontrolle – entwickelt mit Kotlin und Jetpack Compose.**
 
-MedicationTracker macht die tägliche Medikamenteneinnahme einfach und zuverlässig: Medikamente organisieren, eigene Einnahmezeiten festlegen, jede Einnahme bestätigen – und den **Bundeseinheitlichen Medikationsplan (BMP)** direkt per Kamera einscannen.
+Der Medikamentenwecker macht die tägliche Medikamenteneinnahme einfach und zuverlässig: Medikamente organisieren, eigene Einnahmezeiten festlegen, jede Einnahme bestätigen – und den **Bundeseinheitlichen Medikationsplan (BMP)** direkt per Kamera einscannen.
 
 Nie wieder eine Einnahme vergessen.
 
@@ -39,7 +41,7 @@ Nie wieder eine Einnahme vergessen.
 
 Der papierbasierte **Bundeseinheitliche Medikationsplan (BMP)** nach § 31a SGB V enthält oben rechts einen 2D-**DataMatrix-Code**. Darin sind Patienten- und Medikationsdaten im sogenannten **Ultrakurzformat (UKF)** gespeichert – technisch spezifiziert in Anlage 3 der Vereinbarung von KBV, BÄK und DAV.
 
-MedicationTracker liest diesen Code ein und übernimmt:
+Der Medikamentenwecker liest diesen Code ein und übernimmt:
 
 | Daten | Inhalt |
 |---|---|
@@ -116,7 +118,7 @@ Screenshots folgen im Laufe der Entwicklung.
 ## Projektstruktur
 
 ```text
-MedicationTracker/
+Pill_Reminder/
 ├── app/
 │   ├── src/main/
 │   │   ├── java/com/vonreyher/medicationtracker/
@@ -189,7 +191,7 @@ Projekt in Android Studio öffnen, die Gradle-Synchronisierung abwarten, einen E
 
 ## Entwicklung
 
-MedicationTracker wird als native Android-App mit Kotlin und Jetpack Compose entwickelt.
+Der Medikamentenwecker wird als native Android-App mit Kotlin und Jetpack Compose entwickelt.
 
 Prioritäten in der Entwicklung:
 
@@ -257,12 +259,12 @@ Die optionale EMA-Abfrage ist in der Metadatei als Anti-Feature `NonFreeNet` gek
 
 ## Lizenz
 
-MedicationTracker ist freie Software unter der [GNU General Public License v3.0](LICENSE).
+Der Medikamentenwecker ist freie Software unter der [GNU General Public License v3.0](LICENSE).
 
 Verwendete Bibliotheken stehen unter Apache-2.0 bzw. kompatiblen Lizenzen (u. a. AndroidX, Jetpack Compose, CameraX, Glance, [ZXing-cpp](https://github.com/zxing-cpp/zxing-cpp)). Logo und Bestätigungston sind Teil dieses Projekts und stehen ebenfalls unter der GPL-3.0.
 
 ---
 
-**MedicationTracker** – Einfache, zuverlässige Medikamentenerinnerung und Einnahmekontrolle für Android.
+**Medikamentenwecker** – Einfache, zuverlässige Medikamentenerinnerung und Einnahmekontrolle für Android.
 
 Entwickelt mit Kotlin und Jetpack Compose.

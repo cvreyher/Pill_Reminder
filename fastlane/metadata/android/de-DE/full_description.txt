@@ -1,4 +1,4 @@
-MedicationTracker erinnert dich zuverlässig an deine Medikamente – oder an die der Menschen, um die du dich kümmerst.
+Der Medikamentenwecker erinnert dich zuverlässig an deine Medikamente – oder an die der Menschen, um die du dich kümmerst.
 
 <b>Funktionen</b>
 <ul>
@@ -18,3 +18,5 @@ Alle Daten bleiben auf dem Gerät. Es gibt kein Konto, keine Werbung und kein Tr
 
 <b>Hinweis</b>
 Die App ersetzt keine ärztliche oder pharmazeutische Beratung.
+
+Website: https://medikamentenwecker.vonreyher.com
